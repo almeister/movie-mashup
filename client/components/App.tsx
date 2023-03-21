@@ -1,21 +1,21 @@
-import React, { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useEffect } from 'react'
+import { useAppDispatch, useAppSelector } from '../hooks'
 
 import { fetchFruits } from '../actions'
 
-function App () {
-  const fruits = useSelector(state => state.fruits)
-  const dispatch = useDispatch()
+function App() {
+  const fruits = useAppSelector((state) => state.fruits)
+  const dispatch = useAppDispatch()
   useEffect(() => {
     dispatch(fetchFruits())
-  }, [])
+  }, [dispatch])
 
   return (
     <>
-      <div className='app'>
+      <div className="app">
         <h1>Fullstack Boilerplate - with Fruits!</h1>
         <ul>
-          {fruits.map(fruit => (
+          {fruits.map((fruit) => (
             <li key={fruit}>{fruit}</li>
           ))}
         </ul>
