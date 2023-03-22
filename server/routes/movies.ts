@@ -1,34 +1,9 @@
 import express from 'express'
-
 import request from 'superagent'
 
+import { tmdbToken } from '../auth'
+
 const router = express.Router()
-
-/*
-
-NOTES
-
-I can use Bearer token with the v3 API.
-
-Discover - to find films by genre for example 
-https://developers.themoviedb.org/3/discover/movie-discover
-
-Genre list
-https://developers.themoviedb.org/3/genres/get-movie-list
-
-Lists - can get for a specific movie
-https://developers.themoviedb.org/3/movies/get-movie-lists
-
-Movies - popular and top-rated might be a good source
-https://developers.themoviedb.org/3/movies/get-popular-movies
-
-Trending Movies
-https://developers.themoviedb.org/3/trending/get-trending
-
-Search - keywords, movies and people might be useful
-https://developers.themoviedb.org/3/search/search-keywords
-
-*/
 
 const apiUrl = 'https://api.themoviedb.org/3'
 
@@ -47,24 +22,61 @@ interface TopRatedMovies {
   total_pages: number
 }
 
+interface Cast {
+  id: number
+  name: string
+  popularity: number
+  cast_id: number
+  characer: string
+  credit_id: number
+}
+
+interface Credits {
+  id: number
+  cast: Cast[]
+}
+
 function isTopRatedMovies(data: any): data is TopRatedMovies {
   return 'results' in data
 }
 
-router.get('/random', (req, res) => {
-  const apiToken =
-    process.env.TMDB_AUTH_TOKEN || 'No auth token loaded from .env file.'
+function isCredits(data: any): data is Credits {
+  return 'cast' in data
+}
 
+router.get('/random', (req, res) => {
   request
     .get(`${apiUrl}/movie/top_rated`)
     .set('Content-Type', 'application/json')
-    .auth(apiToken, { type: 'bearer' })
+    .auth(tmdbToken, { type: 'bearer' })
     .then((response) => {
       if (isTopRatedMovies(response.body)) {
         const movies = response.body.results
+        // TODO: Check for english language
         const randomMovie = movies[Math.floor(Math.random() * movies.length)]
 
         res.status(200).json(randomMovie)
+      } else {
+        res.status(500).json({ error: 'Movies not found at external API.' })
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ error: (error as Error).message })
+    })
+})
+
+router.get('/credits/:movieId', (req, res) => {
+  const movieId = req.params.movieId
+
+  request
+    .get(`${apiUrl}/movie/${movieId}/credits`)
+    .set('Content-Type', 'application/json')
+    .auth(tmdbToken, { type: 'bearer' })
+    .then((response) => {
+      if (isCredits(response.body)) {
+        // TODO: Check actor's popularity?
+        const castCredits = response.body.cast
+        res.status(200).json({ credits: castCredits })
       } else {
         res.status(500).json({ error: 'Movies not found at external API.' })
       }

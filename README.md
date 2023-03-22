@@ -1,35 +1,21 @@
-# Boilerplate: Fullstack
+# Movie Mashup
 
-## Setup
+## Notes
 
-### What's included
+Discover - to find films by genre for example 
+https://developers.themoviedb.org/3/discover/movie-discover
 
-This repo includes:
+Genre list
+https://developers.themoviedb.org/3/genres/get-movie-list
 
-* a single, simple API endpoint (`/api/v1/fruits`)
-* a single React component (`<App />`)
-* an example database module (`server/db/fruits.js`)
-* an API client module (`client/apis/fruits.js`)
-* configuration for Jest and testing library
-* configuration for server-side debugging in VS Code
-* a single client-side test (`client/components/App.test.js`)
+Lists - can get for a specific movie
+https://developers.themoviedb.org/3/movies/get-movie-lists
 
-### Installation
+Movies - popular and top-rated might be a good source
+https://developers.themoviedb.org/3/movies/get-popular-movies
 
-#### **From the Github UI**
+Trending Movies
+https://developers.themoviedb.org/3/trending/get-trending
 
-See the instructions [here](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template) to use Github's feature to create a new repo from a template.
-
-#### **From the command line**
-
-```
-git clone https://github.com/dev-academy-challenges/boilerplate-fullstack [your-project-name]
-cd [your-project-name]
-npm install # to install dependencies
-npm run dev # to start the dev server
-```
-
-You can find the server running on [http://localhost:3000](http://localhost:3000).
-
----
-[Provide feedback on this repo](https://docs.google.com/forms/d/e/1FAIpQLSfw4FGdWkLwMLlUaNQ8FtP2CTJdGDUv6Xoxrh19zIrJSkvT4Q/viewform?usp=pp_url&entry.1958421517=boilerplate-fullstack)
+Search - keywords, movies and people might be useful
+https://developers.themoviedb.org/3/search/search-keywords
