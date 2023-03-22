@@ -78,7 +78,7 @@ router.get('/credits/:movieId', (req, res) => {
         const castCredits = response.body.cast
         res.status(200).json({ credits: castCredits })
       } else {
-        res.status(500).json({ error: 'Movies not found at external API.' })
+        res.status(500).json({ error: 'Movie cast not found at external API.' })
       }
     })
     .catch((error) => {
