@@ -2,7 +2,7 @@ import { Movie } from '../../common/Movies'
 
 const posterUrlPrefix = 'https://image.tmdb.org/t/p/original/'
 
-export interface MovieViewProps {
+interface MovieViewProps {
   movie: Movie
 }
 

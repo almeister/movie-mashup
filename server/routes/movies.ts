@@ -4,6 +4,7 @@ import request from 'superagent'
 import { tmdbToken } from '../auth'
 import { tmdbApiUrl } from '../apiUrls'
 import { Movie } from '../../common/Movies'
+import { Credit } from '../../common/Credits'
 
 const router = express.Router()
 
@@ -12,15 +13,6 @@ interface MoviesResponse {
   results: Movie[]
   total_results: number
   total_pages: number
-}
-
-interface Credit {
-  id: number
-  name: string
-  popularity: number
-  cast_id: number
-  characer: string
-  credit_id: number
 }
 
 interface Credits {
@@ -40,49 +32,49 @@ function randomNumInRange(min: number, max: number) {
   return min + Math.floor(Math.random() * (max - min + 1))
 }
 
-router.get('/random/:actorId?:excludeGenreId?', (req, res) => {
+router.get('/random/:actorId?:excludeGenreId?', async (req, res) => {
   const excludedGenreIds = req.query?.excludeGenreId || null
   const actorId = req.query?.actorId || null
 
-  const endPoint = `${tmdbApiUrl}/discover/movie?language=en-US&with_original_language=en&primary_release_date.lte=2010-12-30&sort_by=revenue.desc&without_genres=${excludedGenreIds}&with_cast=${actorId}`
-  request
-    .get(endPoint)
-    .set('Content-Type', 'application/json')
-    .auth(tmdbToken, { type: 'bearer' })
-    .then((response) => {
-      if (isMovies(response.body)) {
-        const pages = response.body.total_pages
-        console.log(pages)
-        const randomPage = randomNumInRange(1, pages)
-        const endPointWithPage = endPoint + `&page=${randomPage}`
-        console.log(endPointWithPage)
+  const query = `?language=en-US&with_original_language=en&primary_release_date.gte=1980-01-01&primary_release_date.lte=2013-01-01&sort_by=popularity.desc&vote_average.gte=7&without_genres=${excludedGenreIds}&with_cast=${actorId}`
+  const endPoint = `${tmdbApiUrl}/discover/movie${query}`
 
-        request
-          .get(endPoint)
-          .set('Content-Type', 'application/json')
-          .auth(tmdbToken, { type: 'bearer' })
-          .then((resp) => {
-            if (isMovies(response.body)) {
-              const movies = resp.body.results
-              const randomMovie =
-                movies[Math.floor(Math.random() * movies.length)]
-              res.status(200).json(randomMovie)
-            } else {
-              res
-                .status(500)
-                .json({ error: 'Movies not found at external API.' })
-            }
-          })
-          .catch((error) => {
-            res.status(500).json({ error: (error as Error).message })
-          })
+  try {
+    const firstPage = await request
+      .get(endPoint)
+      .set('Content-Type', 'application/json')
+      .auth(tmdbToken, { type: 'bearer' })
+
+    if (isMovies(firstPage.body)) {
+      const numberOfPages = 50 // Hard limit is 500 on /discover/movie pages: https://developers.themoviedb.org/3/discover/movie-discover
+      console.log(numberOfPages)
+      const randomPageNum = randomNumInRange(1, numberOfPages)
+      const endPointWithPage = endPoint + `&page=${randomPageNum}`
+      console.log(endPointWithPage)
+      // console.log(firstPage.body)
+
+      const randomPage = await request
+        .get(endPointWithPage)
+        .set('Content-Type', 'application/json')
+        .auth(tmdbToken, { type: 'bearer' })
+
+      // console.log(randomPage.body)
+
+      if (isMovies(randomPage.body)) {
+        const movies = randomPage.body.results
+        const randomMovieIndex = randomNumInRange(0, movies.length)
+        res.status(200).json(movies[randomMovieIndex])
       } else {
-        res.status(500).json({ error: 'Movies not found at external API.' })
+        res
+          .status(500)
+          .json({ error: 'Page of movies not found at external API.' })
       }
-    })
-    .catch((error) => {
-      res.status(500).json({ error: (error as Error).message })
-    })
+    } else {
+      res.status(500).json({ error: 'Movies not found at external API.' })
+    }
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message })
+  }
 })
 
 router.get('/credits/:movieId', (req, res) => {
