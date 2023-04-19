@@ -2,13 +2,12 @@ import express from 'express'
 import request from 'superagent'
 
 import { tmdbToken } from '../auth'
+import { tmdbApiUrl } from '../apiUrls'
 import { Movie } from '../../common/Movies'
 
 const router = express.Router()
 
-const apiUrl = 'https://api.themoviedb.org/3'
-
-interface TopRatedMovies {
+interface MoviesResponse {
   page: number
   results: Movie[]
   total_results: number
@@ -29,55 +28,54 @@ interface Credits {
   cast: Credit[]
 }
 
-function isMovies(data: any): data is TopRatedMovies {
-  return 'results' in data
+function isMovies(data: any): data is MoviesResponse {
+  return 'total_pages' && 'results' in data
 }
 
 function isCredits(data: any): data is Credits {
   return 'cast' in data
 }
 
-router.get('/random', (req, res) => {
+function randomNumInRange(min: number, max: number) {
+  return min + Math.floor(Math.random() * (max - min + 1))
+}
+
+router.get('/random/:actorId?:excludeGenreId?', (req, res) => {
+  const excludedGenreIds = req.query?.excludeGenreId || null
+  const actorId = req.query?.actorId || null
+
+  const endPoint = `${tmdbApiUrl}/discover/movie?language=en-US&with_original_language=en&primary_release_date.lte=2010-12-30&sort_by=revenue.desc&without_genres=${excludedGenreIds}&with_cast=${actorId}`
   request
-    .get(`${apiUrl}/movie/top_rated`)
+    .get(endPoint)
     .set('Content-Type', 'application/json')
     .auth(tmdbToken, { type: 'bearer' })
     .then((response) => {
       if (isMovies(response.body)) {
-        const movies = response.body.results
+        const pages = response.body.total_pages
+        console.log(pages)
+        const randomPage = randomNumInRange(1, pages)
+        const endPointWithPage = endPoint + `&page=${randomPage}`
+        console.log(endPointWithPage)
 
-        // TODO: Randomise page
-        // const firstPage = response.body
-        // console.log(firstPage)
-        // const randomPage = Math.floor(Math.random() * firstPage.total_pages)
-
-        // TODO: Check for english language
-        const randomMovie = movies[Math.floor(Math.random() * movies.length)]
-
-        res.status(200).json(randomMovie)
-      } else {
-        res.status(500).json({ error: 'Movies not found at external API.' })
-      }
-    })
-    .catch((error) => {
-      res.status(500).json({ error: (error as Error).message })
-    })
-})
-
-router.get('/random/:actorId', (req, res) => {
-  const actorId = req.params.actorId
-
-  request
-    .get(`${apiUrl}/discover/movie/?with_cast=${actorId}`)
-    .set('Content-Type', 'application/json')
-    .auth(tmdbToken, { type: 'bearer' })
-    .then((response) => {
-      if (isMovies(response.body)) {
-        const movies = response.body.results
-        // TODO: Check for english language
-        const randomMovie = movies[Math.floor(Math.random() * movies.length)]
-
-        res.status(200).json(randomMovie)
+        request
+          .get(endPoint)
+          .set('Content-Type', 'application/json')
+          .auth(tmdbToken, { type: 'bearer' })
+          .then((resp) => {
+            if (isMovies(response.body)) {
+              const movies = resp.body.results
+              const randomMovie =
+                movies[Math.floor(Math.random() * movies.length)]
+              res.status(200).json(randomMovie)
+            } else {
+              res
+                .status(500)
+                .json({ error: 'Movies not found at external API.' })
+            }
+          })
+          .catch((error) => {
+            res.status(500).json({ error: (error as Error).message })
+          })
       } else {
         res.status(500).json({ error: 'Movies not found at external API.' })
       }
@@ -91,7 +89,7 @@ router.get('/credits/:movieId', (req, res) => {
   const movieId = req.params.movieId
 
   request
-    .get(`${apiUrl}/movie/${movieId}/credits`)
+    .get(`${tmdbApiUrl}/movie/${movieId}/credits`)
     .set('Content-Type', 'application/json')
     .auth(tmdbToken, { type: 'bearer' })
     .then((response) => {

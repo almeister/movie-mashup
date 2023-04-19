@@ -1,8 +1,9 @@
 import request from 'superagent'
 
 import { Movie } from '../../common/Movies'
+import { myApiRoot } from '../../server/apiUrls'
 
-const rootUrl = '/api/v1/movies'
+const rootUrl = `${myApiRoot}/movies`
 
 export async function getRandomMovie(): Promise<Movie> {
   try {
@@ -32,10 +33,17 @@ export async function getMovieCredits(movieId: number) {
   }
 }
 
-export async function getRandomMovieByActorId(actorId: number) {
+export async function getRandomMovieExcludeGenre(
+  excludedGenreIds: number[]
+): Promise<Movie> {
+  const genresString = excludedGenreIds
+    .map((genreId) => genreId.toString())
+    .join(', ')
+  console.log(genresString)
+
   try {
     const response = await request
-      .get(`${rootUrl}/random/${actorId}`)
+      .get(`${rootUrl}/random/?excludeGenreId=${genresString}`)
       .accept('application/json')
 
     const movie = response.body

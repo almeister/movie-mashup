@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Movie } from '../../common/Movies'
 import {
   getMovieCredits,
-  getRandomMovieByActorId,
+  getRandomMovieExcludeGenre,
   getRandomMovie,
 } from '../apis/movies'
 import MovieView from './MovieView'
@@ -21,9 +21,12 @@ export default function MoviesView() {
 
   useEffect(() => {
     const fetchMovieData = async () => {
-      const movie = await getRandomMovie()
+      const movie1 = await getRandomMovie()
+      console.log(movie1)
 
-      const movie2 = await getRandomMovie()
+      const movie2 = await getRandomMovieExcludeGenre(movie1.genre_ids)
+      console.log(movie2)
+
       // TODO: Type credit
       const credits = await getMovieCredits(movie2.id)
       // TODO: Randomly select an actor somehow...
@@ -39,7 +42,7 @@ export default function MoviesView() {
 
       setMovieData({
         ...movieData,
-        firstMovie: movie,
+        firstMovie: movie1,
         secondMovie: movie2,
         actor: credit.name,
         quote: trimmedQuote,
