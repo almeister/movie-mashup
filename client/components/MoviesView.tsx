@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react'
 
 import { Movie } from '../../common/Movies'
-import {
-  getMovieCredits,
-  getRandomMovieExcludeGenre,
-  getRandomMovie,
-} from '../apis/movies'
+import { getMovieCredits, getRandomMovieByGenres } from '../apis/movies'
 import MovieView from './MovieView'
 import { getQuoteForFilm } from '../apis/quotes'
 import { Credit } from '../../common/Credits'
 import MovieSurpriseView from './MovieSurpriseView'
+import { funnyGenres, seriousGenres } from '../../common/Genres'
+import { Inclusion } from '../../common/GenresHelper'
 
 interface MashupData {
   firstMovie: Movie
@@ -24,13 +22,23 @@ export default function MoviesView() {
 
   useEffect(() => {
     const fetchMovieData = async () => {
-      const movie1 = await getRandomMovie()
-      console.log(movie1)
+      const movie1 = await getRandomMovieByGenres(
+        7.5,
+        seriousGenres,
+        Inclusion.OR
+      )
+      console.log(`First movie: ${movie1}`)
       const credits1 = await getMovieCredits(movie1.id)
       const credit1 = credits1.credits[0] as Credit
 
-      const movie2 = await getRandomMovieExcludeGenre(movie1.genre_ids)
-      console.log(movie2)
+      // TODO: There's a problem here when the movie1.genres includes genreIds from funnyGenres
+      const movie2 = await getRandomMovieByGenres(
+        6.2,
+        funnyGenres,
+        Inclusion.AND,
+        movie1.genre_ids
+      )
+      console.log(`Second movie: ${movie1}`)
 
       // TODO: Type credit
       const credits = await getMovieCredits(movie2.id)
@@ -39,7 +47,7 @@ export default function MoviesView() {
       const quote = await getQuoteForFilm(movie2.title, credit.name)
       let trimmedQuote = quote
       if (quote.includes(' -')) {
-        console.log(quote)
+        console.log(`Splitting quote: ${quote}`)
 
         const subStrings = quote.split(' -')
         trimmedQuote = subStrings[0]
