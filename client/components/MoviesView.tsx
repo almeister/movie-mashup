@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react'
 
 import { Movie } from '../../common/Movies'
-import { getMovieCredits, getRandomMovieByGenres } from '../apis/movies'
-import MovieView from './MovieView'
+import { getMovieCredits, getRandomMovieExcludeGenres } from '../apis/movies'
 import { getQuoteForFilm } from '../apis/quotes'
 import { Credit } from '../../common/Credits'
 import MovieSurpriseView from './MovieSurpriseView'
-import { funnyGenres, seriousGenres } from '../../common/Genres'
-import { Inclusion } from '../../common/GenresHelper'
+import { alwaysExcludedGenres } from '../../common/Genres'
 
 interface MashupData {
   firstMovie: Movie
-  secondMovie: Movie
+  secondMovie?: Movie
   firstActor: string
-  secondActor: string
+  secondActor?: string
   quote: string
 }
 
@@ -22,29 +20,28 @@ export default function MoviesView() {
 
   useEffect(() => {
     const fetchMovieData = async () => {
-      const movie1 = await getRandomMovieByGenres(
-        7.5,
-        seriousGenres,
-        Inclusion.OR
+      const movie1 = await getRandomMovieExcludeGenres(
+        alwaysExcludedGenres,
+        7.5
       )
-      console.log(`First movie: ${movie1}`)
+      console.log('First movie: ', movie1)
       const credits1 = await getMovieCredits(movie1.id)
       const credit1 = credits1.credits[0] as Credit
 
       // TODO: There's a problem here when the movie1.genres includes genreIds from funnyGenres
-      const movie2 = await getRandomMovieByGenres(
-        6.2,
-        funnyGenres,
-        Inclusion.AND,
-        movie1.genre_ids
-      )
-      console.log(`Second movie: ${movie1}`)
+      // const movie2 = await getRandomMovieByGenres(
+      //   6.2,
+      //   funnyGenres,
+      //   Inclusion.AND,
+      //   movie1.genre_ids
+      // )
+      // console.log('Second movie: ', movie2.title)
 
       // TODO: Type credit
-      const credits = await getMovieCredits(movie2.id)
+      const credits = await getMovieCredits(movie1.id)
       // TODO: Randomly select an actor somehow...
       const credit = credits.credits[0] as Credit
-      const quote = await getQuoteForFilm(movie2.title, credit.name)
+      const quote = await getQuoteForFilm(movie1.title, credit.name)
       let trimmedQuote = quote
       if (quote.includes(' -')) {
         console.log(`Splitting quote: ${quote}`)
@@ -56,9 +53,7 @@ export default function MoviesView() {
       setMovieData({
         ...movieData,
         firstMovie: movie1,
-        secondMovie: movie2,
         firstActor: credit1.name,
-        secondActor: credit.name,
         quote: trimmedQuote,
       })
     }
@@ -69,12 +64,11 @@ export default function MoviesView() {
   return (
     <>
       <div className="poster-row">
-        {movieData ? <MovieView movie={movieData.firstMovie} /> : null}
-        {movieData ? <MovieSurpriseView movie={movieData.secondMovie} /> : null}
+        {movieData ? <MovieSurpriseView movie={movieData.firstMovie} /> : null}
       </div>
       {movieData ? (
         <article>
-          <p>{`Remember that movie ${movieData.firstMovie.title} where ${movieData.firstActor} was all like:`}</p>
+          <p>{`Remember that movie with ${movieData.firstActor} when someone said:`}</p>
           <p>{movieData.quote}</p>
         </article>
       ) : null}

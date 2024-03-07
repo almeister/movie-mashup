@@ -41,7 +41,10 @@ router.get(
     const includedGenreIds = req.query?.includeGenreIds || null
     const minAverageRating = req.query?.minAverageRating || null
 
-    const query = `?language=en-US&with_original_language=en&primary_release_date.gte=1984-01-01&primary_release_date.lte=2008-12-31&vote_average.gte=${minAverageRating}&vote_count.gte=1000&with_genres=${includedGenreIds}&without_genres=${excludedGenreIds}&with_cast=${actorId}`
+    const query = `?language=en-US&with_original_language=en&primary_release_date.gte=1984-01-01&primary_release_date.lte=1999-12-31&vote_average.gte=${minAverageRating}&vote_count.gte=100&without_genres=${excludedGenreIds}`
+    // const query = `?language=en-US&with_original_language=en&primary_release_date.gte=1984-01-01&primary_release_date.lte=2014-12-31&vote_average.gte=${minAverageRating}&vote_count.gte=1000&with_genres=${includedGenreIds}&without_genres=${excludedGenreIds}`
+    // const query = `?language=en-US`
+    // const endPoint = `${tmdbApiUrl}/movie/top_rated${query}`
     const endPoint = `${tmdbApiUrl}/discover/movie${query}`
 
     try {

@@ -16,6 +16,7 @@ export default function MovieSurpriseView(props: MovieViewProps) {
     setShowPoster(true)
   }
 
+  // TODO: Pre-load image
   function getImagePath() {
     return showPoster
       ? `${posterUrlPrefix}${movie?.poster_path}`

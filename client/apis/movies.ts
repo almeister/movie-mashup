@@ -57,17 +57,20 @@ export async function getRandomMovieExcludeGenre(
 }
 
 export async function getRandomMovieExcludeGenres(
-  genresToExclude: Genre[]
+  genresToExclude: Genre[],
+  minAverageRating: number
 ): Promise<Movie> {
-  const excludedGenresString = genresToIdsString(
-    genresToExclude.concat(alwaysExcludedGenres)
-  )
+  const excludedGenresString = `${genresToIdsString(
+    genresToExclude
+  )},${genresToExclude.join()}`
+  console.log(`Excluding genres: ${excludedGenresString}`)
 
   try {
     const response = await request
       .get(`${rootUrl}/random/`)
       .accept('application/json')
       .query(`excludeGenreId=${excludedGenresString}`)
+      .query(`minAverageRating=${minAverageRating}`)
 
     const movie = response.body
     return movie
